@@ -14,8 +14,8 @@ WORKDIR /var/www
 RUN composer install --no-dev --optimize-autoloader
 
 # Configs
-COPY docker/nginx.conf /etc/nginx/sites-available/default
-COPY docker/supervisord.conf /etc/supervisor/conf.d/supervisord.conf
+COPY nginx.conf /etc/nginx/sites-available/default
+COPY supervisord.conf /etc/supervisor/conf.d/supervisord.conf
 
 RUN chown -R www-data:www-data /var/www \
     && chmod -R 755 /var/www/storage
