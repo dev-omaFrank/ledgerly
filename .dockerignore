@@ -1,0 +1,12 @@
+node_modules
+npm-debug.log
+.git
+.env
+.env.example
+Dockerfile*
+docker-compose*
+README.md
+.nyc_output
+coverage
+ Homestead.json
+*.log

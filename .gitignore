@@ -22,3 +22,5 @@
 Homestead.json
 Homestead.yaml
 Thumbs.db
+mysql_data.sql
+mysql_clean.sql
