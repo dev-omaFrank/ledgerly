@@ -49,7 +49,7 @@
     </nav>
 
     <!-- Profile at bottom -->
-    <div class="mt-auto p-6 border-t border-slate-200">
+    {{-- <div class="mt-auto p-6 border-t border-slate-200">
         <div class="flex items-center gap-3">
             <div class="h-10 w-10 rounded-full bg-primary flex items-center justify-center text-white font-bold text-sm">AF</div>
             <div>
@@ -57,5 +57,5 @@
                 <p class="text-xs text-slate-600">alex@example.com</p>
             </div>
         </div>
-    </div>
+    </div> --}}
 </aside>

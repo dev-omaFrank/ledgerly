@@ -12,6 +12,7 @@
                 </div>
 
                 <!-- Auth & CTA Buttons -->
+                <span class="user-initials text-lg font-bold text-slate-900" style="margin-left: 7em;">Welcome back, </span>
                 <div x-data="{ open: false }" class="relative">
                     <!-- Avatar Button -->
                     <button
