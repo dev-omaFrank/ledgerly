@@ -12,7 +12,8 @@ class CreateClientController extends Controller
     {        
         $userInitials = Auth::user()->getNameInitials(); //getnameInitials is defined in User model.
 
-        $clients = ClientModel::withCount('invoices')
+        $clients = ClientModel::where('user_id', auth()->id())
+            ->with(['business', clients]);
             ->withSum('invoices as total_billed', 'total')
             ->with(['invoices' => function($query){
                 $query->latest()->select('id', 'client_id', 'currency');

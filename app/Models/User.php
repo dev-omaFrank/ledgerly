@@ -69,4 +69,8 @@ class User extends Authenticatable
         return $this->hasMany(Subscription::class);
     }
 
+    public function clients(){
+        return $this->hasMany(ClientModel::class, 'user_id');
+    }
+
 }

@@ -21,4 +21,12 @@ class ClientModel extends Model
     public function invoices(){
         return $this->hasMany(Invoice::class, 'client_id');
     }
+
+    public function user(){
+        return $this->belongsTo(User::class, 'user_id');
+    }
+
+    public function business(){
+        return $this->belongsTo(BusinessModel::class);
+    }
 }
