@@ -140,9 +140,6 @@
                                 <tr>
                                     <td colspan="6" class="px-4 sm:px-6 py-12">
                                         <div class="flex flex-col items-center justify-center">
-                                            <svg class="h-12 w-12 text-slate-300 mb-4" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
-                                                <path stroke-linecap="round" stroke-linejoin="round" d="M9 12h3.75M9 15h3.75M9 18h3.75m3 .75H18a2.25 2.25 0 002.25-2.25V6.108c0-1.135-.845-2.098-1.976-2.192a48.424 48.424 0 00-1.123-.08m-5.801 0c-.065.21-.1.433-.1.66V18a2.25 2.25 0 002.25 2.25H18" />
-                                            </svg>
                                             <p class="text-slate-500 font-medium">No invoices found</p>
                                             <p class="text-slate-400 text-sm mt-1">Create your first invoice to get started</p>
                                         </div>
