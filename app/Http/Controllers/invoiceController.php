@@ -6,35 +6,31 @@ use App\Http\Requests\InvoiceRequest;
 use App\Models\BusinessModel;
 use App\Models\ClientModel;
 use App\Models\Invoice;
+use Barryvdh\DomPDF\Facade\Pdf;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\URL;
 use Illuminate\Validation\ValidationException;
-use Barryvdh\DomPDF\Facade\Pdf;
- use Illuminate\Support\Str;
 
 class invoiceController extends Controller
 {
-     public function getClientsAndBusinesses()
+    public function getClientsAndBusinesses()
     {
         $clients = ClientModel::where('user_id', auth()->id())
-        ->orderBy('client_name')
-        ->select('id', 'client_name', 'client_email')
-        ->get();
+            ->orderBy('client_name')
+            ->select('id', 'client_name', 'client_email')
+            ->get();
 
         $businesses = BusinessModel::where('user_id', auth()->id())
-        ->orderBy('business_name')
-        ->select('id', 'business_name', 'business_email')
-        ->get();
+            ->orderBy('business_name')
+            ->select('id', 'business_name', 'business_email')
+            ->get();
 
-        $userInitials = Auth::user()->getNameInitials(); //getnameInitials is defined in User model.
+        $userInitials = Auth::user()->getNameInitials(); // getnameInitials is defined in User model.
 
         return view('invoices.create', compact('clients', 'businesses', 'userInitials'));
     }
-
-   
 
     public function createInvoice(InvoiceRequest $request)
     {
@@ -68,13 +64,13 @@ class invoiceController extends Controller
             } while ($exists);
 
             // calculate monetary values
-            $subtotal = collect($data['items'])->sum(fn($item) => $item['quantity'] * $item['price']);
+            $subtotal = collect($data['items'])->sum(fn ($item) => $item['quantity'] * $item['price']);
             $taxAmount = $subtotal * ($data['tax'] / 100);
             $total = $subtotal + $taxAmount - $data['discount'];
 
             if ($total < 0) {
                 throw ValidationException::withMessages([
-                    'discount' => 'Discount cannot exceed invoice total.'
+                    'discount' => 'Discount cannot exceed invoice total.',
                 ]);
             }
 
@@ -87,7 +83,6 @@ class invoiceController extends Controller
             $invoiceData['subtotal'] = round($subtotal, 2);
             $invoiceData['tax'] = round($taxAmount, 2);
             $invoiceData['total'] = round($total, 2);
-
 
             $invoice = Invoice::create($invoiceData);
 
@@ -107,9 +102,10 @@ class invoiceController extends Controller
             // 'data' => $invoice
         ]);
     }
-    
-    public function fetchInvoices(){
-        $userInitials = Auth::user()->getNameInitials(); //getnameInitials is defined in User model.
+
+    public function fetchInvoices()
+    {
+        $userInitials = Auth::user()->getNameInitials(); // getnameInitials is defined in User model.
 
         $invoices = Invoice::with(['business', 'client'])
             ->latest()
@@ -118,14 +114,16 @@ class invoiceController extends Controller
         return view('pages.invoices', compact('invoices', 'userInitials'));
     }
 
-    public function show(Invoice $invoice){
+    public function show(Invoice $invoice)
+    {
         $invoice->load(['business.bankAccounts', 'client', 'items']);
 
         return view('invoices.show', compact('invoice'));
     }
 
-    public function updateInvoice(Invoice $invoice, Request $request){
-         $validated = $request->validate([
+    public function updateInvoice(Invoice $invoice, Request $request)
+    {
+        $validated = $request->validate([
             'status' => ['required', 'in:draft,sent,paid,partial,overdue,cancelled'],
         ]);
 
@@ -135,7 +133,7 @@ class invoiceController extends Controller
 
         return response()->json([
             'status' => true,
-            'message' => 'You have successfully updated your invoice'
+            'message' => 'You have successfully updated your invoice',
         ]);
     }
 
@@ -146,23 +144,40 @@ class invoiceController extends Controller
         return view('invoices.show', compact('invoice'));
     }
 
+    // public function downloadInvoicePdf(Invoice $invoice)
+    // {
+    //     \Log::info('PDF download attempt', [
+    //         'user_id' => auth()->id(),
+    //         'user_id_type' => gettype(auth()->id()),
+    //         'invoice_id' => $invoice->id,
+    //         'invoice_user_id' => $invoice->user_id,
+    //         'invoice_user_id_type' => gettype($invoice->user_id),
+    //         'url' => request()->fullUrl(),
+    //     ]);
+
+    //     if ($invoice->user_id != auth()->id()) {
+    //         \Log::warning('PDF download blocked - ownership mismatch', [
+    //             'auth_id' => auth()->id(),
+    //             'invoice_user_id' => $invoice->user_id,
+    //         ]);
+    //         abort(403);
+    //     }
+
+    //     $invoice->load(['business', 'client', 'items']);
+
+    //     // Pass a flag to indicate PDF mode
+    //     $pdf = Pdf::loadView('invoices.pdf', [
+    //         'invoice' => $invoice,
+    //     ])->setPaper('a4', 'portrait');
+
+    //     return response()->streamDownload(
+    //         fn () => print ($pdf->output()),
+    //         "invoice-{$invoice->invoice_number}.pdf"
+    //     );
+    // }
 
     public function downloadInvoicePdf(Invoice $invoice)
     {
-        if ($invoice->user_id != auth()->id()) {
-            abort(403);
-        }
-
-        $invoice->load(['business', 'client', 'items']);
-
-        // Pass a flag to indicate PDF mode
-        $pdf = Pdf::loadView('invoices.pdf', [
-            'invoice' => $invoice,
-        ])->setPaper('a4', 'portrait');
-
-        return response()->streamDownload(
-            fn () => print($pdf->output()),
-            "invoice-{$invoice->invoice_number}.pdf"
-        );
-    }       
+        return response('Test: Invoice '.$invoice->id.' for user '.auth()->id());
+    }
 }
