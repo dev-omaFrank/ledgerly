@@ -20,6 +20,10 @@ Route::get('/invoices/{invoice}/pdf-view', [InvoiceController::class, 'pdfView']
     ->middleware('signed'); 
 //end
 
+Route::middleware(['auth'])->group(function(){
+    Route::get('/invoices/invoice-{invoice}/pdf', [invoiceController::class, 'downloadInvoicePdf'])->name('invoices.pdf');
+});
+
 Route::middleware(['auth', 'verified'])->group(function() {
     Route::get('/dashboard', [DashboardController::class, 'fetchDashboardStats'])->name('pages.dashboard');
 
@@ -30,8 +34,6 @@ Route::middleware(['auth', 'verified'])->group(function() {
     Route::get('/invoices/show-invoice-{invoice}', [invoiceController::class, 'show'])->name('invoices.show');
 
     Route::get('/invoices/create', [invoiceController::class, 'getClientsAndBusinesses'])->name('invoices.create.get')->middleware(checkFreeLimit::class);
-
-    Route::get('/invoices/invoice-{invoice}/pdf', [invoiceController::class, 'downloadInvoicePdf'])->name('invoices.pdf');
     
     Route::get('/business-profile-settings', [BusinessProfileController::class, 'loadPage'])->middleware(checkFreeLimit::class);
 
