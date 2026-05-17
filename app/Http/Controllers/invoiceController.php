@@ -156,9 +156,8 @@ class invoiceController extends Controller
         $invoice->load(['business', 'client', 'items']);
 
         // Pass a flag to indicate PDF mode
-        $pdf = Pdf::loadView('invoices.show', [
+        $pdf = Pdf::loadView('invoices.pdf', [
             'invoice' => $invoice,
-            'isPdf' => true,
         ])->setPaper('a4', 'portrait');
 
         return response()->streamDownload(
