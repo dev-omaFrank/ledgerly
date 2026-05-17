@@ -149,7 +149,7 @@ class invoiceController extends Controller
 
     public function downloadInvoicePdf(Invoice $invoice)
     {
-        if ($invoice->user_id !== auth()->id()) {
+        if ($invoice->user_id != auth()->id()) {
             abort(403);
         }
 
@@ -158,7 +158,7 @@ class invoiceController extends Controller
         // Pass a flag to indicate PDF mode
         $pdf = Pdf::loadView('invoices.show', [
             'invoice' => $invoice,
-            'isPdf' => true, // <--- key change
+            'isPdf' => true,
         ])->setPaper('a4', 'portrait');
 
         return response()->streamDownload(
