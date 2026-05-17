@@ -107,7 +107,8 @@ class invoiceController extends Controller
     {
         $userInitials = Auth::user()->getNameInitials(); // getnameInitials is defined in User model.
 
-        $invoices = Invoice::with(['business', 'client'])
+        $invoices = Invoice::where('user_id', auth()->id())
+            ->with(['business', 'client'])
             ->latest()
             ->paginate(10);
 
@@ -144,48 +145,36 @@ class invoiceController extends Controller
         return view('invoices.show', compact('invoice'));
     }
 
-    // public function downloadInvoicePdf(Invoice $invoice)
-    // {
-    //     \Log::info('PDF download attempt', [
-    //         'auth_id' => auth()->id(),
-    //         'auth_id_type' => gettype(auth()->id()),
-    //         'invoice_id' => $invoice->id,
-    //         'invoice_user_id' => $invoice->user_id,
-    //         'invoice_user_id_type' => gettype($invoice->user_id),
-    //         'match_strict' => $invoice->user_id === auth()->id(),
-    //         'match_loose' => $invoice->user_id == auth()->id(),
-    //     ]);
-
-    //     if ($invoice->user_id != auth()->id()) {
-    //         \Log::warning('PDF download blocked - ownership mismatch', [
-    //             'auth_id' => auth()->id(),
-    //             'invoice_user_id' => $invoice->user_id,
-    //         ]);
-    //         abort(403);
-    //     }
-
-    //     $invoice->load(['business', 'client', 'items']);
-
-    //     // Pass a flag to indicate PDF mode
-    //     $pdf = Pdf::loadView('invoices.pdf', [
-    //         'invoice' => $invoice,
-    //     ])->setPaper('a4', 'portrait');
-
-    //     return response()->streamDownload(
-    //         fn () => print ($pdf->output()),
-    //         "invoice-{$invoice->invoice_number}.pdf"
-    //     );
-    // }
-
     public function downloadInvoicePdf(Invoice $invoice)
     {
-        return response()->json([
+        \Log::info('PDF download attempt', [
             'auth_id' => auth()->id(),
             'auth_id_type' => gettype(auth()->id()),
+            'invoice_id' => $invoice->id,
             'invoice_user_id' => $invoice->user_id,
             'invoice_user_id_type' => gettype($invoice->user_id),
-            'strict_match' => $invoice->user_id === auth()->id(),
-            'loose_match' => $invoice->user_id == auth()->id(),
+            'match_strict' => $invoice->user_id === auth()->id(),
+            'match_loose' => $invoice->user_id == auth()->id(),
         ]);
+
+        if ($invoice->user_id != auth()->id()) {
+            \Log::warning('PDF download blocked - ownership mismatch', [
+                'auth_id' => auth()->id(),
+                'invoice_user_id' => $invoice->user_id,
+            ]);
+            abort(403);
+        }
+
+        $invoice->load(['business', 'client', 'items']);
+
+        // Pass a flag to indicate PDF mode
+        $pdf = Pdf::loadView('invoices.pdf', [
+            'invoice' => $invoice,
+        ])->setPaper('a4', 'portrait');
+
+        return response()->streamDownload(
+            fn () => print ($pdf->output()),
+            "invoice-{$invoice->invoice_number}.pdf"
+        );
     }
 }

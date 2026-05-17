@@ -16,7 +16,7 @@ class DashboardController extends Controller
             ->where('user_id', $userId)
             ->sum('total');
 
-        $outstandingRevenue = Invoice::where('status', ['sent', 'overdue'])
+        $outstandingRevenue = Invoice::whereIn('status', ['sent', 'overdue'])
             ->where('user_id', $userId)
             ->sum('total');
 
