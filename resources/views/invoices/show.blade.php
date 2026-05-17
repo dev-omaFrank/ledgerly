@@ -3,255 +3,243 @@
         $isPdf = request()->query('download') ?? false;
     @endphp
 
-    <div x-data="{ sidebarOpen: false }" class="flex min-h-screen bg-gray-100">
+    <div x-data="{ sidebarOpen: false }" class="flex min-h-screen bg-gradient-to-br from-slate-50 to-slate-100">
+        <x-mobile-toggle-button/>
 
-        <div class="p-6 max-w-5xl mx-auto space-y-6 bg-white shadow rounded">
+        <div class="flex-1 p-4 sm:p-6 lg:p-8">
+            <div class="max-w-5xl mx-auto space-y-6 bg-white shadow-sm border border-slate-200 rounded-xl overflow-hidden">
 
-            @if($isPdf)
-                {{-- PDF-friendly layout(pdf-version) --}}
-                <!-- Header -->
-                <div style="display: flex; justify-content: space-between; align-items: center;">
-                    <div>
-                        <h1 style="font-size: 24px; font-weight: bold;">Invoice {{ $invoice->invoice_number }}</h1>
-                        <p style="font-size: 12px; color: #6B7280;">Issued {{ \Carbon\Carbon::parse($invoice->issue_date)->format('M d, Y') }}</p>
-                    </div>
-                </div>
+                @if($isPdf)
+                    {{-- PDF-friendly layout(pdf-version) --}}
+                    <div class="p-6 sm:p-8 space-y-6">
+                        <!-- Header -->
+                        <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                            <div>
+                                <h1 class="text-2xl sm:text-3xl font-bold text-slate-900">Invoice {{ $invoice->invoice_number }}</h1>
+                                <p class="text-sm text-slate-600 mt-1">Issued {{ \Carbon\Carbon::parse($invoice->issue_date)->format('M d, Y') }}</p>
+                            </div>
+                        </div>
 
-                <!-- Status and Logo Badge -->
-                <div style="display: flex; justify-content: space-between; align-items: center; margin: 8px 0;">
-                    <!-- Status Badge -->
-                    <div style="font-weight: bold;">
-                        STATUS: 
-                        <span style="padding: 4px 8px; font-weight: bolder;
-                            {{ $invoice->status === 'paid' ? 'background-color:#D1FAE5; color:#065F46;' : '' }}
-                            {{ $invoice->status === 'draft' ? 'background-color:#F3F4F6; color:#374151;' : '' }}
-                            {{ $invoice->status === 'overdue' ? 'background-color:#FEE2E2; color:#991B1B;' : '' }}
-                            {{ !in_array($invoice->status, ['paid','draft','overdue']) ? 'background-color:#FEF3C7; color:#78350F;' : '' }}
-                        ">
-                            {{ Str::upper($invoice->status) }}
-                        </span>
-                    </div>
+                        <!-- Status Badge -->
+                        <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                            <div class="flex items-center gap-2">
+                                <span class="font-semibold text-slate-900">STATUS:</span>
+                                <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold
+                                    {{ $invoice->status === 'paid' ? 'bg-emerald-100 text-emerald-700' : '' }}
+                                    {{ $invoice->status === 'draft' ? 'bg-slate-100 text-slate-700' : '' }}
+                                    {{ $invoice->status === 'overdue' ? 'bg-red-100 text-red-700' : '' }}
+                                    {{ !in_array($invoice->status, ['paid','draft','overdue']) ? 'bg-amber-100 text-amber-700' : '' }}
+                                ">
+                                    {{ Str::upper($invoice->status) }}
+                                </span>
+                            </div>
+                        </div>
 
-                    <!-- Business Logo -->
-                    {{-- <div>
-                        @if($invoice->business->business_logo)
-                            <img src="{{ asset('storage/' . $invoice->business->business_logo) }}" 
-                                alt="{{ $invoice->business->business_name }} logo" 
-                                style="max-height: 60px; object-fit: contain; border-radius: 10px;">
-                        @endif
-                    </div> --}}
-                </div>
+                        <!-- Business & Client Info -->
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                            <div class="p-4 border border-slate-200 rounded-lg">
+                                <h3 class="font-semibold text-slate-900 mb-2">From</h3>
+                                <p class="font-medium text-slate-900">{{ $invoice->business->business_name }}</p>
+                                <p class="text-sm text-slate-600">{{ $invoice->business->business_email }}</p>
+                                <p class="text-sm text-slate-600 mt-2">
+                                    {{ $invoice->business->bankAccounts->account_name ?? 'N/A' }} | 
+                                    {{ $invoice->business->bankAccounts->bank_name ?? 'N/A' }} | 
+                                    {{ $invoice->business->bankAccounts->account_number ?? 'N/A' }}
+                                </p>
+                            </div>
+                            <div class="p-4 border border-slate-200 rounded-lg">
+                                <h3 class="font-semibold text-slate-900 mb-2">Bill To</h3>
+                                <p class="font-medium text-slate-900">{{ $invoice->client->client_name }}</p>
+                                <p class="text-sm text-slate-600">{{ $invoice->client->client_email }}</p>
+                            </div>
+                        </div>
 
-                <!-- Business & Client Info -->
-                <table style="width: 100%; margin-bottom: 16px;">
-                    <tr>
-                        <td style="vertical-align: top; padding: 12px; border:1px solid #ddd; border-radius:4px;">
-                            <strong>From</strong><br>
-                            {{$invoice->business->business_name}}<br>
-                            {{ $invoice->business->business_email }}<br>
-                            {{ $invoice->business->bankAccounts->account_name }} | {{ $invoice->business->bankAccounts->bank_name }} | {{ $invoice->business->bankAccounts->account_number }}
-                        </td>
-                        <td style="vertical-align: top; padding: 12px; border:1px solid #ddd; border-radius:4px;">
-                            <strong>Bill To</strong><br>
-                            {{ $invoice->client->client_name }}<br>
-                            {{ $invoice->client->client_email }}
-                        </td>
-                    </tr>
-                </table>
-
-                <!-- Line Items Table -->
-                <table style="width:100%; border-collapse: collapse; margin-bottom: 16px;">
-                    <thead>
-                        <tr>
-                            <th style="border:1px solid #ddd; padding:8px; text-align:left;">Description</th>
-                            <th style="border:1px solid #ddd; padding:8px; text-align:center;">Qty</th>
-                            <th style="border:1px solid #ddd; padding:8px; text-align:right;">Price</th>
-                            <th style="border:1px solid #ddd; padding:8px; text-align:right;">Total</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @foreach($invoice->items as $item)
-                            <tr>
-                                <td style="border:1px solid #ddd; padding:8px;">{{ $item->description }}</td>
-                                <td style="border:1px solid #ddd; padding:8px; text-align:center;">{{ $item->quantity }}</td>
-                                <td style="border:1px solid #ddd; padding:8px; text-align:right;">{{ $invoice->currency }} {{ number_format($item->price,2) }}</td>
-                                <td style="border:1px solid #ddd; padding:8px; text-align:right; font-weight:bold;">{{ $invoice->currency }} {{ number_format($item->total,2) }}</td>
-                            </tr>
-                        @endforeach
-                    </tbody>
-                </table>
-
-                <!-- Totals -->
-                <table style="width: 100%; margin-bottom: 16px;">
-                    <tr>
-                        <td style="width:66%;"></td>
-                        <td style="width:34%; border:1px solid #ddd; padding:8px;">
-                            <table style="width:100%; border-collapse: collapse;">
-                                <tr>
-                                    <td style="text-align:left;">Subtotal</td>
-                                    <td style="text-align:right;">{{ $invoice->currency }} {{ number_format($invoice->subtotal,2) }}</td>
-                                </tr>
-                                <tr>
-                                    <td style="text-align:left;">Tax</td>
-                                    <td style="text-align:right;">{{ $invoice->currency }} {{ number_format($invoice->tax,2) }}</td>
-                                </tr>
-                                <tr>
-                                    <td style="text-align:left;">Discount</td>
-                                    <td style="text-align:right;">- {{ $invoice->currency }} {{ number_format($invoice->discount,2) }}</td>
-                                </tr>
-                                <tr>
-                                    <td style="border-top:1px solid #ddd; font-weight:bold;">Total</td>
-                                    <td style="border-top:1px solid #ddd; text-align:right; font-weight:bold; color: #2563EB;">{{ $invoice->currency }} {{ number_format($invoice->total,2) }}</td>
-                                </tr>
+                        <!-- Line Items Table -->
+                        <div class="overflow-x-auto">
+                            <table class="w-full border-collapse">
+                                <thead>
+                                    <tr class="bg-slate-50 border-b-2 border-slate-200">
+                                        <th class="px-4 py-3 text-left text-xs font-semibold text-slate-600 uppercase">Description</th>
+                                        <th class="px-4 py-3 text-center text-xs font-semibold text-slate-600 uppercase">Qty</th>
+                                        <th class="px-4 py-3 text-right text-xs font-semibold text-slate-600 uppercase">Price</th>
+                                        <th class="px-4 py-3 text-right text-xs font-semibold text-slate-600 uppercase">Total</th>
+                                    </tr>
+                                </thead>
+                                <tbody class="divide-y divide-slate-200">
+                                    @foreach($invoice->items as $item)
+                                        <tr class="hover:bg-slate-50 transition-colors">
+                                            <td class="px-4 py-3 text-sm text-slate-900">{{ $item->description }}</td>
+                                            <td class="px-4 py-3 text-sm text-slate-900 text-center">{{ $item->quantity }}</td>
+                                            <td class="px-4 py-3 text-sm text-slate-900 text-right">{{ $invoice->currency }} {{ number_format($item->price, 2) }}</td>
+                                            <td class="px-4 py-3 text-sm font-semibold text-slate-900 text-right">{{ $invoice->currency }} {{ number_format($item->total, 2) }}</td>
+                                        </tr>
+                                    @endforeach
+                                </tbody>
                             </table>
-                        </td>
-                    </tr>
-                </table>
+                        </div>
 
-                <!-- Notes -->
-                @if($invoice->notes)
-                    <div style="margin-bottom:16px;">
-                        <strong>Notes:</strong>
-                        <p>{{ $invoice->notes }}</p>
-                    </div>
-                @endif
+                        <!-- Totals -->
+                        <div class="flex justify-end">
+                            <div class="w-full sm:w-80 space-y-3 border border-slate-200 rounded-lg p-4 bg-slate-50">
+                                <div class="flex justify-between text-sm">
+                                    <span class="text-slate-600">Subtotal</span>
+                                    <span class="font-medium text-slate-900">{{ $invoice->currency }} {{ number_format($invoice->subtotal, 2) }}</span>
+                                </div>
+                                <div class="flex justify-between text-sm">
+                                    <span class="text-slate-600">Tax</span>
+                                    <span class="font-medium text-slate-900">{{ $invoice->currency }} {{ number_format($invoice->tax, 2) }}</span>
+                                </div>
+                                <div class="flex justify-between text-sm">
+                                    <span class="text-slate-600">Discount</span>
+                                    <span class="font-medium text-slate-900">- {{ $invoice->currency }} {{ number_format($invoice->discount, 2) }}</span>
+                                </div>
+                                <div class="border-t border-slate-300 pt-3 flex justify-between">
+                                    <span class="font-bold text-slate-900">Total</span>
+                                    <span class="font-bold text-lg text-blue-600">{{ $invoice->currency }} {{ number_format($invoice->total, 2) }}</span>
+                                </div>
+                            </div>
+                        </div>
 
-                <!-- Footer -->
-                <div style="margin-top:32px; font-size:12px; color:#6B7280;">
-                    <p>Please pay within 14 days. Contact {{ $invoice->business->business_email }} for questions.</p>
-                    <em>Generate customized Invoices with Ledgerly. Click <a href="{{ url('/') }}">{{ url('/') }}</a> to get started.</em>
-                </div>
-
-            @else
-                {{-- Original Tailwind-based responsive layout(web-version) --}}
-                {{-- Paste your original Blade code here, unchanged --}}
-                {{-- This preserves full web responsiveness --}}
-                <div class="flex justify-between items-center">
-                    <div>
-                        <h1 class="text-2xl font-bold text-slate-900">Invoice {{ $invoice->invoice_number }}</h1>
-                        <p class="text-sm text-slate-500">Issued {{ \Carbon\Carbon::parse($invoice->issue_date)->format('M d, Y') }}</p>
-                    </div>
-
-                    <div class="flex gap-3">
-                        <a href="{{ route('invoices.pdf', [$invoice->id, 'download' => 1]) }}" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:opacity-90" style="background-color: blueviolet;color: white;">Download PDF</a>
-                        <a href="{{ route('invoices.index') }}" class="px-4 py-2 border border-slate-200 rounded-lg hover:bg-slate-50" style="background-color: blueviolet;color: white;">Back</a>
-                    </div>
-                </div>
-                <div style="display: flex; justify-content: space-between; align-items: center; margin: 8px 0;">
-                    <!-- Status Badge -->
-                    <div style="font-weight: bold;">
-                        STATUS: 
-                        <span style="padding: 4px 8px; font-weight: bolder;
-                            {{ $invoice->status === 'paid' ? 'background-color:#D1FAE5; color:#065F46;' : '' }}
-                            {{ $invoice->status === 'draft' ? 'background-color:#F3F4F6; color:#374151;' : '' }}
-                            {{ $invoice->status === 'overdue' ? 'background-color:#FEE2E2; color:#991B1B;' : '' }}
-                            {{ !in_array($invoice->status, ['paid','draft','overdue']) ? 'background-color:#FEF3C7; color:#78350F;' : '' }}
-                        ">
-                            {{ Str::upper($invoice->status) }}
-                        </span>
-                    </div>
-
-                    <!-- Business Logo -->
-                    {{-- <div>
-                        @if($invoice->business->business_logo)
-                            <img src="{{ asset('storage/' . $invoice->business->business_logo) }}" 
-                                alt="{{ $invoice->business->business_name }} logo" 
-                                style="max-height: 60px; object-fit: contain;border-radius: 10px;">
+                        <!-- Notes -->
+                        @if($invoice->notes)
+                            <div class="p-4 border border-slate-200 rounded-lg bg-slate-50">
+                                <h3 class="font-semibold text-slate-900 mb-2">Notes</h3>
+                                <p class="text-sm text-slate-600">{{ $invoice->notes }}</p>
+                            </div>
                         @endif
-                    </div> --}}
-                </div>
 
-                <!-- Business & Client Info -->
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div class="p-6 border rounded shadow-sm">
-                        <h2 class="text-sm font-semibold text-slate-500 mb-2">From</h2>
-                        <p class="font-bold text-slate-900">{{$invoice->business->business_name}}</p>
-                        <p class="text-sm text-slate-600">{{ $invoice->business->business_email }}</p>
-                        <span class="text-sm text-slate-600">{{ $invoice->business->bankAccounts->account_name }}</span> | <span class="text-sm text-slate-600">{{ $invoice->business->bankAccounts->bank_name }}</span> | <span class="text-sm text-slate-600">{{ $invoice->business->bankAccounts->account_number }}</span>
-                        
-                    </div>
-
-                    <div class="p-6 border rounded shadow-sm">
-                        <h2 class="text-sm font-semibold text-slate-500 mb-2">Bill To</h2>
-                        <p class="font-bold text-slate-900">{{ $invoice->client->client_name }}</p>
-                        <p class="text-sm text-slate-600">{{ $invoice->client->client_email }}</p>
-                    </div>
-                </div>
-
-                <!-- Line Items Table -->
-                <div class="overflow-x-auto border rounded shadow-sm bg-white">
-                    <table class="min-w-full border-collapse">
-                        <thead class="bg-slate-50">
-                            <tr class="text-left text-xs font-semibold text-slate-500 uppercase">
-                                <th class="px-6 py-3">Description</th>
-                                <th class="px-6 py-3 text-center">Qty</th>
-                                <th class="px-6 py-3 text-right">Price</th>
-                                <th class="px-6 py-3 text-right">Total</th>
-                            </tr>
-                        </thead>
-                        <tbody class="divide-y divide-slate-100">
-                            @foreach($invoice->items as $item)
-                                <tr>
-                                    <td class="px-6 py-4">{{ $item->description }}</td>
-                                    <td class="px-6 py-4 text-center">{{ $item->quantity }}</td>
-                                    <td class="px-6 py-4 text-right">
-                                        {{ $invoice->currency }} {{ number_format($item->price, 2) }}
-                                    </td>
-                                    <td class="px-6 py-4 text-right font-semibold">
-                                        {{ $invoice->currency }} {{ number_format($item->total, 2) }}
-                                    </td>
-                                </tr>
-                            @endforeach
-                        </tbody>
-                    </table>
-                </div>
-
-                <!-- Totals -->
-                <div class="flex justify-end">
-                    <div class="w-full md:w-1/3 space-y-2">
-                        <div class="flex justify-between text-sm">
-                            <span class="text-slate-500">Subtotal</span>
-                            <span class="font-medium">{{ $invoice->currency }} {{ number_format($invoice->subtotal, 2) }}</span>
-                        </div>
-                        <div class="flex justify-between text-sm">
-                            <span class="text-slate-500">Tax</span>
-                            <span>{{ $invoice->currency }} {{ number_format($invoice->tax, 2) }}</span>
-                        </div>
-                        <div class="flex justify-between text-sm">
-                            <span class="text-slate-500">Discount</span>
-                            <span>- {{ $invoice->currency }} {{ number_format($invoice->discount, 2) }}</span>
-                        </div>
-                        <div class="border-t pt-3 flex justify-between font-bold text-lg">
-                            <span>Total</span>
-                            <span class="text-blue-600">{{ $invoice->currency }} {{ number_format($invoice->total, 2) }}</span>
+                        <!-- Footer -->
+                        <div class="border-t border-slate-200 pt-6 text-center">
+                            <p class="text-sm text-slate-600">Please pay within 14 days. Contact {{ $invoice->business->business_email }} for questions.</p>
+                            <p class="text-xs text-slate-500 mt-2">Generate customized Invoices with Digital Horizon. Visit <a href="{{ url('/') }}" class="text-blue-600 hover:underline">{{ url('/') }}</a> to get started.</p>
                         </div>
                     </div>
-                </div>
 
-                <!-- Notes -->
-                @if($invoice->notes)
-                        <div class="card p-6">
-                            <h3 class="font-semibold mb-2">Notes</h3>
-                            <p class="text-slate-600 text-sm">
-                                {{ $invoice->notes }}
-                            </p>
+                @else
+                    {{-- Web-based responsive layout --}}
+                    <div class="p-4 sm:p-6 lg:p-8 space-y-6">
+                        <!-- Header with Actions -->
+                        <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                            <div>
+                                <h1 class="text-2xl sm:text-3xl font-bold text-slate-900">Invoice {{ $invoice->invoice_number }}</h1>
+                                <p class="text-sm text-slate-600 mt-1">Issued {{ \Carbon\Carbon::parse($invoice->issue_date)->format('M d, Y') }}</p>
+                            </div>
+
+                            <div class="flex flex-col sm:flex-row gap-3">
+                                <a href="{{ route('invoices.pdf', [$invoice->id, 'download' => 1]) }}" class="inline-flex items-center justify-center px-4 py-2 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 transition-colors duration-200 text-sm">
+                                    <svg class="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M12 16.5V9.75m0 0l3 3m-3-3l-3 3M6.75 19.5a4.5 4.5 0 01-1.41-8.775 5.25 5.25 0 0110.233-2.33A3 3 0 0116.5 19.5H6.75z" />
+                                    </svg>
+                                    Download PDF
+                                </a>
+                                <a href="{{ route('invoices.index') }}" class="inline-flex items-center justify-center px-4 py-2 border border-slate-300 text-slate-700 font-medium rounded-lg hover:bg-slate-50 transition-colors duration-200 text-sm">
+                                    <svg class="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M10.5 19.5L3 12m0 0l7.5-7.5M3 12h18" />
+                                    </svg>
+                                    Back
+                                </a>
+                            </div>
                         </div>
+
+                        <!-- Status Badge -->
+                        <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                            <div class="flex items-center gap-2">
+                                <span class="font-semibold text-slate-900">STATUS:</span>
+                                <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold
+                                    {{ $invoice->status === 'paid' ? 'bg-emerald-100 text-emerald-700' : '' }}
+                                    {{ $invoice->status === 'draft' ? 'bg-slate-100 text-slate-700' : '' }}
+                                    {{ $invoice->status === 'overdue' ? 'bg-red-100 text-red-700' : '' }}
+                                    {{ !in_array($invoice->status, ['paid','draft','overdue']) ? 'bg-amber-100 text-amber-700' : '' }}
+                                ">
+                                    {{ Str::upper($invoice->status) }}
+                                </span>
+                            </div>
+                        </div>
+
+                        <!-- Business & Client Info -->
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                            <div class="p-6 border border-slate-200 rounded-lg bg-slate-50">
+                                <h3 class="text-sm font-semibold text-slate-600 uppercase mb-3">From</h3>
+                                <p class="font-bold text-slate-900">{{ $invoice->business->business_name }}</p>
+                                <p class="text-sm text-slate-600 mt-1">{{ $invoice->business->business_email }}</p>
+                                <p class="text-sm text-slate-600 mt-3">
+                                    <span class="font-medium">{{ $invoice->business->bankAccounts->account_name ?? 'N/A' }}</span><br>
+                                    {{ $invoice->business->bankAccounts->bank_name ?? 'N/A' }}<br>
+                                    {{ $invoice->business->bankAccounts->account_number ?? 'N/A' }}
+                                </p>
+                            </div>
+
+                            <div class="p-6 border border-slate-200 rounded-lg bg-slate-50">
+                                <h3 class="text-sm font-semibold text-slate-600 uppercase mb-3">Bill To</h3>
+                                <p class="font-bold text-slate-900">{{ $invoice->client->client_name }}</p>
+                                <p class="text-sm text-slate-600 mt-1">{{ $invoice->client->client_email }}</p>
+                            </div>
+                        </div>
+
+                        <!-- Line Items Table -->
+                        <div class="overflow-x-auto border border-slate-200 rounded-lg">
+                            <table class="w-full min-w-max">
+                                <thead class="bg-slate-50 border-b border-slate-200 sticky top-0 z-10">
+                                    <tr>
+                                        <th class="px-6 py-3 text-left text-xs font-semibold text-slate-600 uppercase tracking-wider whitespace-nowrap">Description</th>
+                                        <th class="px-6 py-3 text-center text-xs font-semibold text-slate-600 uppercase tracking-wider whitespace-nowrap">Qty</th>
+                                        <th class="px-6 py-3 text-right text-xs font-semibold text-slate-600 uppercase tracking-wider whitespace-nowrap">Price</th>
+                                        <th class="px-6 py-3 text-right text-xs font-semibold text-slate-600 uppercase tracking-wider whitespace-nowrap">Total</th>
+                                    </tr>
+                                </thead>
+                                <tbody class="divide-y divide-slate-200">
+                                    @foreach($invoice->items as $item)
+                                        <tr class="hover:bg-slate-50 transition-colors duration-150">
+                                            <td class="px-6 py-4 text-sm text-slate-900 whitespace-nowrap">{{ $item->description }}</td>
+                                            <td class="px-6 py-4 text-sm text-slate-900 text-center whitespace-nowrap">{{ $item->quantity }}</td>
+                                            <td class="px-6 py-4 text-sm text-slate-900 text-right whitespace-nowrap">{{ $invoice->currency }} {{ number_format($item->price, 2) }}</td>
+                                            <td class="px-6 py-4 text-sm font-semibold text-slate-900 text-right whitespace-nowrap">{{ $invoice->currency }} {{ number_format($item->total, 2) }}</td>
+                                        </tr>
+                                    @endforeach
+                                </tbody>
+                            </table>
+                        </div>
+
+                        <!-- Totals -->
+                        <div class="flex justify-end">
+                            <div class="w-full sm:w-96 space-y-3 border border-slate-200 rounded-lg p-6 bg-gradient-to-br from-slate-50 to-white">
+                                <div class="flex justify-between text-sm">
+                                    <span class="text-slate-600">Subtotal</span>
+                                    <span class="font-medium text-slate-900">{{ $invoice->currency }} {{ number_format($invoice->subtotal, 2) }}</span>
+                                </div>
+                                <div class="flex justify-between text-sm">
+                                    <span class="text-slate-600">Tax</span>
+                                    <span class="font-medium text-slate-900">{{ $invoice->currency }} {{ number_format($invoice->tax, 2) }}</span>
+                                </div>
+                                <div class="flex justify-between text-sm">
+                                    <span class="text-slate-600">Discount</span>
+                                    <span class="font-medium text-slate-900">- {{ $invoice->currency }} {{ number_format($invoice->discount, 2) }}</span>
+                                </div>
+                                <div class="border-t border-slate-300 pt-3 flex justify-between">
+                                    <span class="font-bold text-slate-900">Total</span>
+                                    <span class="font-bold text-lg text-blue-600">{{ $invoice->currency }} {{ number_format($invoice->total, 2) }}</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Notes -->
+                        @if($invoice->notes)
+                            <div class="p-6 border border-slate-200 rounded-lg bg-slate-50">
+                                <h3 class="font-semibold text-slate-900 mb-2">Notes</h3>
+                                <p class="text-sm text-slate-600">{{ $invoice->notes }}</p>
+                            </div>
+                        @endif
+
+                        <!-- Footer -->
+                        <div class="border-t border-slate-200 pt-6 space-y-2">
+                            <p class="text-sm text-slate-600">Please pay within 14 days. Contact {{ $invoice->business->business_email }} for questions.</p>
+                            <p class="text-xs text-slate-500">Generate customized Invoices with {{ config('app_name') }}. Visit <a href="{{ url('/') }}" class="text-blue-600 hover:underline">{{ url('/') }}</a> to get started.</p>
+                        </div>
+                    </div>
+
                 @endif
 
-                <footer>
-                    <div>
-                        <p class="text-slate-600 text-sm">
-                            Please pay within 14 days. Contact {{ $invoice->business->business_email }} for questions.
-                        </p>
-                    </div>
-                    <div>
-                        <em>Generate customized Invoices with Ledgerly. Click <a href="{{ url('/') }}">here</a> to get started.</em>
-                    </div>
-
-                </footer>
-
-            @endif
-
+            </div>
         </div>
     </div>
 </x-app-layout>

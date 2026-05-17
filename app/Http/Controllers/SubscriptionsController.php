@@ -12,10 +12,10 @@ class SubscriptionsController extends Controller
         // Get all subscriptions for the user with plan, sorted by start date descending
         $subscriptions = $user->subscriptions()
             ->with('plan')
-            ->orderByDesc('start_date') // latest start date first
+            ->orderByDesc('start_date') 
             ->get()
-            ->unique('plan_id') // one subscription per plan
-            ->values();         // reindex
+            ->unique('plan_id') 
+            ->values();         
 
         // Convert date fields to Carbon instances
         $subscriptions->transform(function ($subscription) {

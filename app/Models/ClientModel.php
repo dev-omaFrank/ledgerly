@@ -29,4 +29,8 @@ class ClientModel extends Model
     public function business(){
         return $this->belongsTo(BusinessModel::class);
     }
+
+    public function clients(){
+        return $this->belongsTo(ClientModel::class);
+    }
 }
