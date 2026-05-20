@@ -9,10 +9,39 @@ use App\Http\Controllers\invoiceController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\SubscriptionsController;
 use App\Http\Middleware\checkFreeLimit;
+use App\Models\User;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
+use Laravel\Socialite\Socialite;
 
 Route::get('/', function () {
     return view('pages.index');
+});
+
+Route::get('/auth/redirect/google', function(){
+    //use with() to request a refresh token for offline access later
+    return Socialite::driver('google')->with(['access_type' =>'offline', 'prompt' => 'consent'])->redirect();
+});
+
+Route::get('/auth/callback/google', function(){
+    // google related info must be explicitly stored because it is not defined in fillable. 
+    //This is to avoid mass-assignment vulnerability.
+    $google_user = Socialite::driver('google')->user();
+
+    $user = User::firstorNew(['email' => $google_user->getEmail()]);
+    $user->signup_method = 'google';
+    $user->name = $google_user->getName();
+    $user->google_id = $google_user->getId();
+    $user->google_token = $google_user->token;
+
+    $user->google_refresh_token = $google_user->refreshToken;
+    $user->google_avatar= $google_user->getAvatar();
+
+    $user->save();
+
+    Auth::login($user);
+
+    return redirect()->intended('/dashboard');
 });
 
 Route::get('/invoices/{invoice}/pdf-view', [InvoiceController::class, 'pdfView'])

@@ -1,4 +1,3 @@
-<!-- Login Page - Copy and paste into your Blade file -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -102,6 +101,8 @@
                     >
                         Create Account
                     </a>
+
+                   
                 </form>
 
                 <!-- Error Messages -->
