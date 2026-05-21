@@ -27,6 +27,10 @@ Route::get('/auth/callback/google', function(){
     // google related info must be explicitly stored because it is not defined in fillable. 
     //This is to avoid mass-assignment vulnerability.
     $google_user = Socialite::driver('google')->user();
+    
+    if(!$google_user){
+        return redirect('/')->with('google_auth_error', 'Google authentication failed.');
+    }
 
     $user = User::firstorNew(['email' => $google_user->getEmail()]);
     $user->signup_method = 'google';

@@ -122,6 +122,9 @@
                             Sign-up with Google
                         </a>
                     </button>
+                    @error('google_auth_error')
+                            <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
+                    @enderror
 
                     <!-- Divider -->
                     <div class="relative">
