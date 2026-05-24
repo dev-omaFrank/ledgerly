@@ -36,7 +36,7 @@ class checkFreeLimit
             !$noActiveSubscription &&
             ($invoiceLimitReached || $businessLimitReached)
         ) {
-            return redirect('billing/upgrade');
+            return redirect('billing/upgrade')->setStatusCode(402);
         }
 
         return $next($request);
