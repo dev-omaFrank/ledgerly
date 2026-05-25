@@ -48,36 +48,6 @@ Route::get('/auth/callback/google', function(){
     return redirect()->intended('/dashboard');
 });
 
-Route::get('/auth/redirect/facebook', function(){
-    //use with() to request a refresh token for offline access later
-    return Socialite::driver('google')->with(['access_type' =>'offline', 'prompt' => 'consent'])->redirect();
-});
-
-Route::get('/auth/callback/facebook', function(){
-    // google related info must be explicitly stored because it is not defined in fillable. 
-    //This is to avoid mass-assignment vulnerability.
-    $google_user = Socialite::driver('google')->user();
-
-    if(!$google_user){
-        return redirect('/')->with('google_auth_error', 'Google authentication failed.');
-    }
-
-    $user = User::firstorNew(['email' => $google_user->getEmail()]);
-    $user->signup_method = 'google';
-    $user->name = $google_user->getName();
-    $user->google_id = $google_user->getId();
-    $user->google_token = $google_user->token;
-
-    $user->google_refresh_token = $google_user->refreshToken;
-    $user->google_avatar= $google_user->getAvatar();
-
-    $user->save();
-
-    Auth::login($user);
-
-    return redirect()->intended('/dashboard');
-});
-
 Route::get('/invoices/{invoice}/pdf-view', [InvoiceController::class, 'pdfView'])
     ->name('invoices.pdf.view')
     ->middleware('signed'); 
@@ -88,6 +58,9 @@ Route::middleware(['auth'])->group(function(){
 });
 
 Route::middleware(['auth', 'verified'])->group(function() {
+    Route::post('/user/complete-onboarding', [App\Http\Controllers\UserController::class, 'completeOnboarding'])
+        ->name('user.complete-onboarding');
+
     Route::get('/dashboard', [DashboardController::class, 'fetchDashboardStats'])->name('pages.dashboard');
 
     Route::get('/clients', [CreateClientController::class, 'fetchClients']);

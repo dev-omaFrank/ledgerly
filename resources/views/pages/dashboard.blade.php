@@ -168,5 +168,5 @@
 
         </div>
     </div>
-
+    <x-onboarding-component/>
 </x-app-layout>
